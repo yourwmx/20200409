@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.neusoft.webauth.login.dao.LoginDao">
+    <!--个人信息查询-->
+    <select id="findInformationById" parameterType="java.lang.String" resultType="com.neusoft.webauth.login.entity.UserDataInfo">
+        select
+            user_account userAccount,
+            photo,
+            role
+        from
+            t_sys_user
+        where
+            user_id = #{userId}
+    </select>
+</mapper>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xzsd.app.login.dao.LoginDao">
+    <!--个人信息查询-->
+    <select id="findInformationById" parameterType="java.lang.String" resultType="com.xzsd.app.login.entity.UserDataInfo">
+        select
+            user_account userAccount,
+            photo,
+            customer_id customerId,
+            store_id storeId
+        from
+            t_sys_user a,t_sys_customer b
+        where
+            a.user_id = #{userId}
+            and b.user_id = #{userId}
+    </select>
+</mapper>

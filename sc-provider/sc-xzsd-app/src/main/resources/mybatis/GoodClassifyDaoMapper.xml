@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xzsd.app.goodClassify.dao.GoodClassifyDao">
+    <!--查询商品一级分类-->
+    <select id="queryGoodClassify" resultType="com.xzsd.app.goodClassify.entity.GoodClassifyCateInfo">
+        select
+            classify_id classifyId,
+            classify_name classifyName
+        from
+            t_sys_classify
+        where
+            is_deleted = 0
+            and last_classify_id = 0
+        order by gmt_create
+    </select>
+</mapper>

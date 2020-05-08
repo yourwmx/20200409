@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xzsd.pc.slideshow.dao.SlideshowDao">
+    <!--新增轮播图-->
+    <insert id="addSlideshow" parameterType="com.xzsd.pc.slideshow.entity.SlideshowInfo">
+        insert into t_sys_slideshow
+            (slideshows_id,
+             slideshows_route,
+             slideshows_sort,
+             slideshows_time_start,
+             slideshows_time_end,
+             goods_id,
+             slideshows_state,
+             is_deleted,
+             create_by,
+             gmt_create,
+             last_modified_by,
+             gmt_modified,
+             version)
+         values
+            (#{slideshowsId},
+            #{slideshowsRoute},
+            #{slideshowsSort},
+            #{slideshowsTimeStart},
+            #{slideshowsTimeEnd},
+            #{goodsId},
+            0,
+            0,
+            #{createBy},
+            now(),
+            #{lastModifiedBy},
+            now(),
+            0)
+    </insert>
+    <!--检验轮播图排序是否重复和商品是否存在-->
+    <select id="querySlideshowSort" parameterType="com.xzsd.pc.slideshow.entity.SlideshowInfo" resultType="int">
+        select count(*)
+        from t_sys_slideshow
+        where is_deleted = 0
+        <if test="slideshowsId != null and slideshowsId !=''">
+            and slideshows_id != #{slideshowsId}
+        </if>
+        and (slideshows_sort = #{slideshowsSort} or goods_id = #{goodsId})
+    </select>
+    <!--修改轮播图-->
+    <insert id="updateSlideshowById" parameterType="com.xzsd.pc.slideshow.entity.SlideshowInfo">
+        update
+            t_sys_slideshow
+        set
+            slideshows_route = #{slideshowsRoute},
+            slideshows_sort = #{slideshowsSort},
+            slideshows_time_start = #{slideshowsTimeStart},
+            slideshows_time_end = #{slideshowsTimeEnd},
+            goods_id = #{goodsId},
+            last_modified_by    = #{lastModifiedBy},
+            gmt_modified    = now(),
+            version         = version + 1
+        where
+            slideshows_id = #{slideshowsId}
+        and version = #{version}
+    </insert>
+    <!--删除轮播图-->
+    <update id="deleteSlideshow" parameterType="com.xzsd.pc.slideshow.entity.SlideshowInfo">
+        update t_sys_slideshow
+        set
+        is_deleted = 1,
+        gmt_modified = now(),
+        last_modified_by = #{updateUserId},
+        version = version + 1
+        where slideshows_id in
+        <foreach item="item" index="index" collection="listDeleteSlideshowsId" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+    <!--轮播图启用禁用-->
+    <update id="updateSlideshowState" parameterType="com.xzsd.pc.slideshow.entity.SlideshowInfo">
+        update t_sys_slideshow
+        set
+        slideshows_state = #{slideshowsState},
+        gmt_modified = now(),
+        last_modified_by = #{updateUserId},
+        version = version + 1
+        where slideshows_id in
+        <foreach item="item" index="index" collection="listUpdateSlideshowsId" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+    <!--轮播图分页列表-->
+    <select id="listSlideshows" parameterType="com.xzsd.pc.slideshow.entity.SlideshowInfo" resultType="com.xzsd.pc.slideshow.entity.SlideshowInfo">
+        select
+            slideshows_id slideshowsId,
+            slideshows_sort slideshowsSort,
+            slideshows_route slideshowsRoute,
+            slideshows_state slideshowsState,
+            slideshows_time_start slideshowsTimeStart,
+            slideshows_time_end slideshowsTimeEnd,
+            goods_id goodsId,
+            version
+        from
+            t_sys_slideshow
+        <if test="slideshowsState != null and slideshowsState !=''">
+        where
+            slideshows_state = #{slideshowsState}
+        </if>
+        order by slideshows_sort
+    </select>
+    <!--商品分页列表-->
+    <select id="listGoods" parameterType="com.xzsd.pc.good.entity.GoodInfo" resultType="com.xzsd.pc.good.entity.GoodInfo">
+        select
+            a.goods_id goodsId,
+            a.goods_name goodsName,
+            a.goods_state goodsState,
+            b.classify_name goodsFirstClassifyName,
+            c.classify_name goodsSecondClassifyName
+        from t_sys_goods a,t_sys_classify b,t_sys_classify c
+        where a.is_deleted = 0
+            and a.goods_first_classify_id = b.classify_id
+            and a.goods_second_classify_id = c.classify_id
+        <if test="goodsName != null and goodsName !=''">
+            and a.goods_name like concat('%',#{goodsName},'%')
+        </if>
+        <if test="goodsId != null and goodsId !=''">
+            and a.goods_id like concat('%',#{goodsId},'%')
+        </if>
+        order by a.gmt_create desc
+    </select>
+</mapper>

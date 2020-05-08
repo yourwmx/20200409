@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="sc-eureka-server:jar">
+    <output-path>$PROJECT_DIR$/build/classes/artifacts/sc_eureka_server_jar</output-path>
+    <root id="archive" name="sc-eureka-server.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/sc-monitor/sc-admin-server/META-INF/MANIFEST.MF" />
+      </element>
+    </root>
+  </artifact>
+</component>

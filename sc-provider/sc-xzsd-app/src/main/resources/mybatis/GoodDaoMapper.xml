@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xzsd.app.good.dao.GoodDao">
+    <!--商品二级分类及列表-->
+    <resultMap id="listGoodsMap" type="com.xzsd.app.goodClassify.entity.GoodClassifySecondInfo">
+        <result property="classifyName" column="classify_name"></result>
+        <collection property="list" ofType="com.xzsd.app.good.entity.GoodInfo">
+            <id property="goodsId" column="goods_id"></id>
+            <result property="goodsName" column="goods_name"></result>
+            <result property="goodsFixMoney" column="goods_fix_money"></result>
+            <result property="goodsSaleMoney" column="goods_sale_money"></result>
+            <result property="goodsPhoto" column="goods_photo"></result>
+        </collection>
+    </resultMap>
+    <select id="listGoods" parameterType="java.lang.String" resultMap="listGoodsMap">
+        select
+            classify_name,
+            goods_id,
+            goods_name,
+            goods_fix_money,
+            goods_sale_money,
+            goods_photo
+        from
+            t_sys_classify a
+        left join
+            t_sys_goods b
+        on
+            a.is_deleted = 0
+            and a.last_classify_id = #{goodsFirstClassifyId}
+            and a.classify_id = b.goods_second_classify_id
+        where
+			b.is_deleted = 0
+            and b.goods_state = 1
+        order by b.gmt_create desc
+    </select>
+    <!--查询商品详细-->
+    <select id="findGoodById" parameterType="java.lang.String" resultType="com.xzsd.app.good.entity.GoodInfo">
+        select
+            a.goods_id goodsId,
+            a.goods_name goodsName,
+            a.goods_fix_money goodsFixMoney,
+            a.goods_sale_money goodsSaleMoney,
+            a.goods_advertise goodsAdvertise,
+            a.goods_produce goodsProduce,
+            a.goods_photo goodsPhoto,
+            round(avg(b.comment_level),1) commentLevel,
+            a.goods_look_number goodsLookNumber
+        from
+            t_sys_goods a,t_sys_comment b
+        where
+            a.is_deleted = 0
+            and a.goods_id = #{goodsId}
+            and b.goods_id = #{goodsId}
+        order by a.gmt_create desc
+    </select>
+    <!--查询门店名称-->
+    <select id="findStoreById" parameterType="java.lang.String" resultType="java.lang.String">
+        select
+            store_name
+        from
+            t_sys_store
+        where
+            store_id = #{storeId}
+    </select>
+    <!--查询商品库存与销量-->
+    <select id="queryGoodsRestNumber" parameterType="java.util.List" resultType="com.xzsd.app.good.entity.GoodInfo">
+        select
+            goods_id goodsId,
+            goods_rest_number goodsRestNumber,
+            goods_sale_number goodsSaleNumber,
+            version
+        from
+            t_sys_goods
+        where
+            goods_id in
+        <foreach collection="goodsRestNumberList" index="index" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </select>
+    <!--修改商品库存-->
+    <update id="updateGoodsRestNumber" parameterType="java.util.List">
+        <foreach collection="originalGoodsInfo" index="index" item="item" separator=";" open="" close="">
+            update
+                t_sys_goods
+            set
+                goods_rest_number = #{item.goodsRestNumber},
+                gmt_modified = now(),
+                last_modified_by = #{item.lastModifiedBy},
+                version = version + 1
+            where
+                is_deleted = 0
+                and goods_id = #{item.goodsId}
+                and version = #{item.version}
+        </foreach>
+    </update>
+    <!--修改商品销量-->
+    <update id="updateGoodsSaleNumber" parameterType="java.util.List">
+        <foreach collection="originalGoodsInfo" index="index" item="item" separator=";" open="" close="">
+            update
+                t_sys_goods
+            set
+                goods_sale_number = #{item.goodsSaleNumber},
+                gmt_modified = now(),
+                last_modified_by = #{item.lastModifiedBy},
+                version = version + 1
+            where
+                is_deleted = 0
+                and goods_id = #{item.goodsId}
+                and version = #{item.version}
+        </foreach>
+    </update>
+    <!--修改商品浏览量-->
+    <update id="updateGoodsLookNumber" parameterType="java.lang.String">
+        update
+            t_sys_goods
+        set
+            goods_look_number = goods_look_number + 1
+        where
+            goods_id = #{goodsId}
+    </update>
+</mapper>

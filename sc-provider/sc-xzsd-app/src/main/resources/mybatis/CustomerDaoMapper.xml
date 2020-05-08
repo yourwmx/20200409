@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xzsd.app.customer.dao.CustomerDao">
+    <!--客户注册-->
+    <insert id="addCustomer" parameterType="com.xzsd.app.customer.entity.CustomerInfo">
+        insert into t_sys_customer
+            (customer_id,
+            store_id,
+            user_id,
+            customer_credit,
+            is_deleted,
+            create_by,
+            gmt_create,
+            last_modified_by,
+            gmt_modified,
+            version)
+        values
+            (#{customerId},
+            #{storeId},
+            #{userId},
+            0,
+            0,
+            #{createBy},
+            now(),
+            #{lastModifiedBy},
+            now(),
+            0)
+    </insert>
+    <!--修改门店邀请码-->
+    <update id="updateStoreInviteById" parameterType="com.xzsd.app.customer.entity.CustomerInfo">
+        update
+            t_sys_customer
+        set
+            store_id = #{storeId}
+        where
+            is_deleted = 0
+            and customer_id = #{customerId}
+    </update>
+</mapper>

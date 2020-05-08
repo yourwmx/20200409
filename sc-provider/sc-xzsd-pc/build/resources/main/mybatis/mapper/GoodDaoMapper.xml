@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xzsd.pc.good.dao.GoodDao">
+    <!--新增商品-->
+    <insert id="addGood" parameterType="com.xzsd.pc.good.entity.GoodInfo">
+        insert into t_sys_goods
+            (goods_id,
+             goods_first_classify_id,
+             goods_second_classify_id,
+             goods_merchant_name,
+             goods_name,
+             goods_advertise,
+             goods_press,
+             goods_author,
+             goods_fix_money,
+             goods_sale_money,
+             goods_sale_number,
+             goods_produce,
+             goods_state,
+             goods_look_number,
+             goods_rest_number,
+             goods_isbn_number,
+             goods_photo,
+             goods_comment,
+             is_deleted,
+             create_by,
+             gmt_create,
+             last_modified_by,
+             gmt_modified,
+             version)
+        values
+             (#{goodsId},
+             #{goodsFirstClassifyId},
+             #{goodsSecondClassifyId},
+             #{goodsMerchantName},
+             #{goodsName},
+             #{goodsAdvertise},
+             #{goodsPress},
+             #{goodsAuthor},
+             #{goodsFixMoney},
+             #{goodsSaleMoney},
+             #{goodsSaleNumber},
+             #{goodsProduce},
+             0,
+             #{goodsLookNumber},
+             #{goodsRestNumber},
+             #{goodsIsbnNumber},
+             #{goodsPhoto},
+             #{goodsComment},
+             0,
+             #{createBy},
+             now(),
+             #{lastModifiedBy},
+             now(),
+             0)
+    </insert>
+    <!--统计商品数量-->
+    <select id="countGoodAccount" parameterType="com.xzsd.pc.good.entity.GoodInfo" resultType="int">
+        select
+            count(*)
+        from
+            t_sys_goods
+        where
+            is_deleted = 0
+        <if test="goodsId != null and goodsId !=''">
+            and goods_id != #{goodsId}
+        </if>
+        and goods_name = #{goodsName}
+    </select>
+    <!--修改商品-->
+    <update id="updateGoodById" parameterType="com.xzsd.pc.good.entity.GoodInfo">
+        update t_sys_goods
+        set
+            goods_first_classify_id = #{goodsFirstClassifyId},
+            goods_second_classify_id = #{goodsSecondClassifyId},
+            goods_merchant_name = #{goodsMerchantName},
+            goods_name = #{goodsName},
+            goods_advertise = #{goodsAdvertise},
+            goods_press = #{goodsPress},
+            goods_author = #{goodsAuthor},
+            goods_fix_money = #{goodsFixMoney},
+            goods_sale_money = #{goodsSaleMoney},
+            goods_sale_number = #{goodsSaleNumber},
+            goods_produce = #{goodsProduce},
+            goods_state = #{goodsState},
+            goods_look_number = #{goodsLookNumber},
+            goods_rest_number = #{goodsRestNumber},
+            goods_isbn_number = #{goodsIsbnNumber},
+            goods_photo = #{goodsPhoto},
+            goods_comment = #{goodsComment},
+            last_modified_by = #{lastModifiedBy},
+            gmt_modified = now(),
+            version = version + 1
+        where
+            goods_id = #{goodsId}
+            and version = #{version}
+    </update>
+    <!--删除商品-->
+    <update id="deleteGood" parameterType="com.xzsd.pc.good.entity.GoodInfo">
+        update t_sys_goods
+        set
+            is_deleted = 1,
+            gmt_modified = now(),
+            last_modified_by = #{updateUserId},
+            version = version + 1
+        where goods_id in
+        <foreach item="item" index="index" collection="listDeleteGoodsId" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+    <!--商品上下架-->
+    <update id="updateGoodState" parameterType="com.xzsd.pc.good.entity.GoodInfo">
+        update t_sys_goods
+        set
+            goods_state = #{goodsState},
+            <if test="goodsState == 1">
+                goods_shelf_time = now(),
+            </if>
+            gmt_modified = now(),
+            last_modified_by = #{updateUserId},
+            version = version + 1
+        where goods_id in
+        <foreach item="item" index="index" collection="listUpdateGoodsId" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+    <!--查询商品分类-->
+    <select id="queryTempGoodClassify" parameterType="java.lang.String" resultType="com.xzsd.pc.good.entity.GoodClassifyDataInfo">
+        select
+            classify_id classifyId,
+            classify_name classifyName
+        from
+            t_sys_classify
+        where
+            is_deleted = 0
+            and last_classify_id = #{lastClassifyId}
+    </select>
+    <!--商品分页列表-->
+    <select id="listGoods" parameterType="com.xzsd.pc.good.entity.GoodInfo" resultType="com.xzsd.pc.good.entity.GoodInfo">
+        select
+            a.goods_id goodsId,
+            goods_name goodsName,
+            goods_fix_money goodsFixMoney,
+            goods_sale_money goodsSaleMoney,
+            goods_sale_number goodsSaleNumber,
+            b.classify_name goodsFirstClassifyName,
+            c.classify_name goodsSecondClassifyName,
+            goods_advertise goodsAdvertise,
+            goods_produce goodsProduce,
+            goods_state goodsState,
+            goods_shelf_time goodsShelfTime,
+            goods_look_number goodsLookNumber,
+            goods_merchant_name goodsMerchantName,
+            goods_rest_number goodsRestNumber,
+            goods_isbn_number goodsIsbnNumber,
+            a.version
+        from t_sys_goods a,t_sys_classify b,t_sys_classify c
+        where a.is_deleted = 0
+            and a.goods_first_classify_id = b.classify_id
+            and a.goods_second_classify_id = c.classify_id
+        <if test="goodsName != null and goodsName !=''">
+            and goods_name like concat('%',#{goodsName},'%')
+        </if>
+        <if test="goodsState != null and goodsState !=''">
+            and goods_state like concat('%',#{goodsState},'%')
+        </if>
+        <if test="goodsAdvertise != null and goodsAdvertise !=''">
+            and goods_advertise like concat('%',#{goodsAdvertise},'%')
+        </if>
+        <if test="goodsPress != null and goodsPress !=''">
+            and goods_press like concat('%',#{goodsPress},'%')
+        </if>
+        <if test="goodsAuthor != null and goodsAuthor !=''">
+            and goods_author like concat('%',#{goodsAuthor},'%')
+        </if>
+        order by a.gmt_create desc
+    </select>
+</mapper>

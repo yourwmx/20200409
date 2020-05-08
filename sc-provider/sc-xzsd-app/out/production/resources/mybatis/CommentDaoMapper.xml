@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xzsd.app.comment.dao.CommentDao">
+    <resultMap id="listCommentsMap" type="com.xzsd.app.comment.entity.CommentInfo">
+        <id property="commentId" column="comment_id"></id>
+        <result property="customerId" column="customer_id"></result>
+        <result property="customerAccount" column="user_account"></result>
+        <result property="commentLevel" column="comment_level"></result>
+        <result property="comment" column="comment"></result>
+        <result property="commentTime" column="comment_time"></result>
+        <collection property="list" ofType="com.xzsd.app.photo.entity.PhotoInfo" select="listPhoto" column="comment_id">
+            <result property="commentPhoto" column="comment_photo"></result>
+            <result property="photoSort" column="photo_sort"></result>
+        </collection>
+    </resultMap>
+    <!--查询商品评价分页列表-->
+    <select id="listComments" parameterType="com.xzsd.app.comment.entity.CommentInfo" resultMap="listCommentsMap">
+        select
+            a.comment_id,
+            a.customer_id,
+            c.user_account,
+            a.comment_level,
+            a.comment,
+            a.comment_time
+        from
+            t_sys_comment a,t_sys_customer b,t_sys_user c
+        where
+            a.is_deleted = 0
+            and a.goods_id = #{goodsId}
+            and a.customer_id = b.customer_id
+            and b.user_id = c.user_id
+        <if test="highComment == 0">
+            and a.comment_level in (4,5)
+        </if>
+        <if test="highComment == 1">
+            and a.comment_level in (2,3)
+        </if>
+        <if test="highComment == 2">
+            and a.comment_level = 1
+        </if>
+        order by a.gmt_create desc
+    </select>
+    <select id="listPhoto" parameterType="java.lang.String" resultType="com.xzsd.app.photo.entity.PhotoInfo">
+        select
+            comment_photo commentPhoto,
+            photo_sort photoSort
+        from
+            t_sys_photo
+        where
+            is_deleted = 0
+            and comment_id = #{commentId}
+        order by photo_sort
+    </select>
+    <!--对商品进行评价-->
+    <insert id="actionOrderComment" parameterType="java.util.List">
+        insert into t_sys_comment
+            (comment_id,
+            customer_id,
+            goods_id,
+            comment,
+            comment_level,
+            comment_time,
+            is_deleted,
+            create_by,
+            gmt_create,
+            last_modified_by,
+            gmt_modified,
+            version)
+        values
+            <foreach collection="commentInfoList" index="index" item="item" separator="," open="" close="">
+                (#{item.commentId},
+                #{item.customerId},
+                #{item.goodsId},
+                #{item.comment},
+                #{item.commentLevel},
+                now(),
+                0,
+                #{item.createBy},
+                now(),
+                #{item.lastModifiedBy},
+                now(),
+                0)
+            </foreach>
+    </insert>
+</mapper>

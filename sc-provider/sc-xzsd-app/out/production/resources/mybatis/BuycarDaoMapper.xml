@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xzsd.app.buycar.dao.BuycarDao">
+    <!--新增购物车-->
+    <insert id="addBuycar" parameterType="com.xzsd.app.buycar.entity.BuycarInfo">
+        insert into t_sys_buycar
+            (buycar_id,
+            goods_id,
+            customer_id,
+            total_money,
+            buy_number,
+            is_deleted,
+            create_by,
+            gmt_create,
+            last_modified_by,
+            gmt_modified,
+            version)
+        values
+            (#{buycarId},
+            #{goodsId},
+            #{customerId},
+            #{totalMoney},
+            #{buyNumber},
+            0,
+            #{createBy},
+            now(),
+            #{lastModifiedBy},
+            now(),
+            0)
+    </insert>
+    <!--查询购物车分页列表-->
+    <select id="listBuycars" parameterType="com.xzsd.app.buycar.entity.BuycarInfo" resultType="com.xzsd.app.buycar.entity.BuycarInfo">
+        select
+            buycar_id buycarId,
+            a.goods_id goodsId,
+            goods_photo goodsPhoto,
+            goods_name goodsName,
+            goods_sale_money goodsSaleMoney,
+            total_money totalMoney,
+            buy_number buyNumber
+        from
+            t_sys_buycar a,t_sys_goods b
+        where
+            a.is_deleted = 0
+            and a.goods_id = b.goods_id
+            and customer_id = #{customerId}
+        order by a.gmt_create desc
+    </select>
+    <!--检验商品是否已在购物车中-->
+    <select id="countBuycarGoods" parameterType="com.xzsd.app.buycar.entity.BuycarInfo" resultType="int">
+        select
+            count(*)
+        from
+            t_sys_buycar
+        where
+            is_deleted = 0
+            and goods_id = #{goodsId}
+            and customer_id = #{customerId}
+    </select>
+    <!--修改购物车-->
+    <update id="updateBuycarById" parameterType="com.xzsd.app.buycar.entity.BuycarInfo">
+        update
+            t_sys_buycar
+        set
+            goods_id = #{goodsId},
+            buy_number = #{buyNumber},
+            total_money = #{totalMoney},
+            last_modified_by = #{lastModifiedBy},
+            gmt_modified = now(),
+            version = version + 1
+        where
+            buycar_id = #{buycarId}
+    </update>
+    <!--删除购物车-->
+    <update id="deleteBuycar" parameterType="com.xzsd.app.buycar.entity.BuycarInfo">
+        update
+            t_sys_buycar
+        set
+            is_deleted = 1,
+            gmt_modified = now(),
+            last_modified_by = #{updateUserId},
+            version = version + 1
+        where buycar_id in
+        <foreach item="item" index="index" collection="listDeleteBuycarId" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+</mapper>

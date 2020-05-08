@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xzsd.pc.dictionary.dao.DictionaryDao">
+    <!--查询k对应的v-->
+    <select id="queryVById" parameterType="java.lang.String" resultType="com.xzsd.pc.dictionary.entity.DictionaryInfo">
+        select
+            v,
+            version
+        from
+            t_sys_dictionary
+        where
+            dictionary_id = #{dictionaryId}
+    </select>
+</mapper>

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xzsd.pc.hotgood.dao.HotgoodDao">
+    <!--新增热门位商品-->
+    <insert id="addHotgood" parameterType="com.xzsd.pc.hotgood.entity.HotgoodInfo">
+        insert into t_sys_hotgoods
+            (hotgoods_id,
+            goods_id,
+            hotgoods_sort,
+            is_deleted,
+            create_by,
+            gmt_create,
+            last_modified_by,
+            gmt_modified,
+            version)
+        values
+            (#{hotgoodsId},
+            #{goodsId},
+            #{hotgoodsSort},
+            0,
+            #{createBy},
+            now(),
+            #{lastModifiedBy},
+            now(),
+            0)
+    </insert>
+    <!--检验热门位商品排序是否重复或商品是否存在-->
+    <select id="queryHotgoodSort" parameterType="com.xzsd.pc.hotgood.entity.HotgoodInfo" resultType="int">
+        select
+            count(*)
+        from
+            t_sys_hotgoods
+        where
+            is_deleted = 0
+        <if test="hotgoodsId != null and hotgoodsId != ''">
+            and hotgoods_id != #{hotgoodsId}
+        </if>
+        and
+            (hotgoods_sort = #{hotgoodsSort} or goods_id = #{goodsId})
+    </select>
+    <!--修改热门位商品-->
+    <update id="updateHotgoodById" parameterType="com.xzsd.pc.hotgood.entity.HotgoodInfo">
+        update
+            t_sys_hotgoods
+        set
+            goods_id = #{goodsId},
+            hotgoods_sort = #{hotgoodsSort},
+            version = version + 1
+        where
+            version = #{version}
+            and hotgoods_id = #{hotgoodsId}
+    </update>
+    <!--删除热门位商品-->
+    <update id="deleteHotgood" parameterType="com.xzsd.pc.hotgood.entity.HotgoodInfo">
+        update
+            t_sys_hotgoods
+        set
+            is_deleted = 1,
+            gmt_modified = now(),
+            last_modified_by = #{updateUserId},
+            version = version + 1
+        where hotgoods_id in
+        <foreach item="item" index="index" collection="listDeleteHotgoodsId" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+    <!--热门位商品分页列表-->
+    <select id="listHotgoods" parameterType="com.xzsd.pc.hotgood.entity.HotgoodInfo" resultType="com.xzsd.pc.hotgood.entity.HotgoodInfo">
+        select
+            hotgoods_id hotgoodsId,
+            hotgoods_sort hotgoodsSort,
+            a.goods_id goodsId,
+            goods_name goodsName,
+            goods_sale_money goodsSaleMoney,
+            goods_produce goodsProduce,
+            a.version
+        from
+            t_sys_hotgoods a,t_sys_goods b
+        where
+            a.goods_id = b.goods_id
+        <if test="goodsName != null and goodsName !=''">
+            and goods_name = #{goodsName}
+        </if>
+        <if test="goodsId != null and goodsId !=''">
+            and goods_id = #{goodsId}
+        </if>
+        order by hotgoods_sort
+    </select>
+    <!--热门位商品展示数量设置-->
+    <update id="updateHotgoodNumber" parameterType="com.xzsd.pc.dictionary.entity.DictionaryInfo">
+        update
+            t_sys_dictionary
+        set
+            v = #{v},
+            version = version + 1
+        where
+            dictionary_id = 'HotgoodShowNumber'
+            and version = #{version}
+    </update>
+</mapper>

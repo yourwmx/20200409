@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xzsd.app.driver.dao.DriverDao">
+    <!--司机列表-->
+    <select id="listDrivers" parameterType="java.lang.String" resultType="com.xzsd.app.driver.entity.DriverInfo">
+        select
+            name driverName,
+            phone driverPhone
+        from
+            t_sys_driver a,t_sys_user b
+        where
+            a.is_deleted = 0
+            and a.user_id = b.user_id
+            and driver_area_id = #{storeAreaId}
+    </select>
+    <!--司机详情-->
+    <select id="findDriverById" parameterType="java.lang.String" resultType="com.xzsd.app.driver.entity.DriverInfo">
+        select
+            name driverName,
+            phone driverPhone,
+            driver_area_id driverAreaId,
+            user_account driverAccount,
+            photo
+        from
+            t_sys_driver a,t_sys_user b
+        where
+            a.user_id = #{userId}
+            and b.user_id = #{userId}
+    </select>
+    <!--查询门店-->
+    <select id="findStoreById" parameterType="java.lang.String" resultType="com.xzsd.app.store.entity.StoreInfo">
+        select
+            store_id storeId,
+            store_name storeName,
+            concat(b.v,c.v,d.v,store_address) storeAddress,
+            name storeManagerName,
+            phone
+        from
+            t_sys_store a,t_sys_dictionary b,t_sys_dictionary c,t_sys_dictionary d,t_sys_user e
+        where
+            a.is_deleted = 0
+            and e.is_deleted = 0
+            and a.user_id = e.user_id
+            and store_area_id = #{driverAreaId}
+            and a.store_province_id = b.dictionary_id
+            and a.store_city_id = c.dictionary_id
+            and a.store_area_id = d.dictionary_id
+    </select>
+</mapper>

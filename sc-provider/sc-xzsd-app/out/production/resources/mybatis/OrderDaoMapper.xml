@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xzsd.app.order.dao.OrderDao">
+    <!--订单分页列表-->
+    <resultMap id="listOrdersMap" type="com.xzsd.app.order.entity.OrderInfo">
+        <id property="ordersId" column="orders_id"></id>
+        <result property="customerName" column="name"></result>
+        <result property="customerPhone" column="phone"></result>
+        <result property="buyNumber" column="buy_numbers"></result>
+        <result property="ordersTotalMoney" column="orders_total_money"></result>
+        <result property="ordersState" column="orders_state"></result>
+        <result property="ordersPayState" column="orders_pay_state"></result>
+        <result property="version" column="version"></result>
+        <collection property="orderDetailsInfoList" ofType="com.xzsd.app.orderDetails.entity.OrderDetailsInfo" select="listOrderDetails" column="orders_id">
+            <id property="orderDetailsId" column="order_details_id"></id>
+            <result property="goodsId" column="goods_id"></result>
+            <result property="buyNumber" column="buy_number"></result>
+            <result property="totalMoney" column="total_money"></result>
+            <result property="goodsPhoto" column="goods_photo"></result>
+            <result property="goodsName" column="goods_name"></result>
+            <result property="goodsProduce" column="goods_produce"></result>
+            <result property="goodsSaleMoney" column="goods_sale_money"></result>
+        </collection>
+    </resultMap>
+    <select id="listOrders" parameterType="com.xzsd.app.order.entity.OrderInfo" resultMap="listOrdersMap">
+        select
+            c.name,
+            c.phone,
+            a.orders_id,
+            a.buy_number buy_numbers,
+            a.orders_total_money,
+            a.orders_state,
+            a.orders_pay_state,
+            a.version
+        from
+            t_sys_order a,t_sys_customer b,t_sys_user c
+        where
+            a.is_deleted = 0
+            and a.customer_id = b.customer_id
+            and b.user_id = c.user_id
+        <if test="customerId != null and customerId != ''">
+            and a.customer_id = #{customerId}
+        </if>
+        <if test="storeId != null and storeId != ''">
+            and a.store_id = #{storeId}
+        </if>
+        <if test="ordersPayState != null and ordersPayState !=''">
+            and a.orders_pay_state = #{ordersPayState}
+        </if>
+        <if test="ordersState != null and ordersState !=''">
+            and a.orders_state = #{ordersState}
+        </if>
+        order by a.gmt_create desc
+    </select>
+    <select id="listOrderDetails" parameterType="java.lang.String" resultType="com.xzsd.app.orderDetails.entity.OrderDetailsInfo">
+        select
+            a.goods_id goodsId,
+            buy_number buyNumber,
+            total_money totalMoney,
+            goods_photo goodsPhoto,
+            goods_name goodsName,
+            goods_produce goodsProduce,
+            goods_sale_money goodsSaleMoney
+        from
+            t_sys_order_details a,t_sys_goods b
+        where
+            a.is_deleted = 0
+            and a.goods_id = b.goods_id
+            and a.orders_id = #{ordersId}
+        order by a.gmt_create desc
+    </select>
+    <!--订单详情-->
+    <resultMap id="findOrderByIdMap" type="com.xzsd.app.order.entity.OrderInfo">
+        <id property="ordersId" column="orders_id"></id>
+        <result property="storeName" column="store_name"></result>
+        <result property="storeAddress" column="store_address"></result>
+        <result property="gmtCreate" column="gmt_create"></result>
+        <result property="ordersState" column="orders_state"></result>
+        <result property="buyNumber" column="buy_numbers"></result>
+        <result property="ordersTotalMoney" column="orders_total_money"></result>
+        <result property="customerName" column="name"></result>
+        <result property="customerPhone" column="phone"></result>
+        <collection property="orderDetailsInfoList" ofType="com.xzsd.app.orderDetails.entity.OrderDetailsInfo">
+            <id property="orderDetailsId" column="order_details_id"></id>
+            <result property="goodsId" column="goods_id"></result>
+            <result property="goodsPhoto" column="goods_photo"></result>
+            <result property="goodsName" column="goods_name"></result>
+            <result property="goodsProduce" column="goods_produce"></result>
+            <result property="goodsSaleMoney" column="goods_sale_money"></result>
+            <result property="totalMoney" column="total_money"></result>
+            <result property="buyNumber" column="buy_number"></result>
+        </collection>
+    </resultMap>
+    <select id="findOrderById" parameterType="java.lang.String" resultMap="findOrderByIdMap">
+        select
+            i.phone,
+            i.name,
+            a.orders_id,
+            d.store_name,
+            concat(e.v,f.v,g.v,d.store_address) store_address,
+            a.gmt_create,
+            a.orders_state,
+            a.buy_number buy_numbers,
+            a.orders_total_money,
+            b.goods_id,
+            b.buy_number,
+            b.total_money,
+            c.goods_photo,
+            c.goods_name,
+            c.goods_produce,
+            c.goods_sale_money
+        from
+            t_sys_order a,t_sys_order_details b,t_sys_goods c,t_sys_store d,t_sys_dictionary e,t_sys_dictionary f,t_sys_dictionary g,t_sys_customer h,t_sys_user i
+        where
+            a.is_deleted = 0
+            and a.orders_id = #{ordersId}
+            and b.orders_id = #{ordersId}
+            and a.store_id = d.store_id
+            and d.store_province_id = e.dictionary_id
+            and d.store_city_id = f.dictionary_id
+            and d.store_area_id = g.dictionary_id
+            and b.goods_id = c.goods_id
+            and a.customer_id = h.customer_id
+            and h.user_id = i.user_id
+        order by gmt_create desc
+    </select>
+    <!--订单状态修改-->
+    <update id="updateOrderState" parameterType="com.xzsd.app.order.entity.OrderInfo">
+        update
+            t_sys_order
+        set
+            orders_state = #{ordersState},
+            gmt_modified = now(),
+            last_modified_by = #{lastModifiedBy},
+            version = version + 1
+        where
+            orders_id = #{ordersId}
+            and version = #{version}
+    </update>
+    <!--修改订单状态为已评价-->
+    <update id="updateOrderStateToFinishComment" parameterType="java.lang.String">
+        update
+            t_sys_order
+        set
+            orders_state = #{ordersState}
+        where
+            orders_id = #{ordersId}
+    </update>
+    <!--新增订单-->
+    <insert id="addOrder" parameterType="com.xzsd.app.order.entity.OrderInfo">
+        insert into t_sys_order
+            (orders_id,
+            store_id,
+            customer_id,
+            buy_number,
+            orders_total_money,
+            orders_state,
+            orders_pay_state,
+            orders_pay_time,
+            is_deleted,
+            create_by,
+            gmt_create,
+            last_modified_by,
+            gmt_modified,
+            version)
+        values
+            (#{ordersId},
+            #{storeId},
+            #{customerId},
+            #{buyNumber},
+            #{ordersTotalMoney},
+            0,
+            1,
+            now(),
+            0,
+            #{createBy},
+            now(),
+            #{lastModifiedBy},
+            now(),
+            0)
+    </insert>
+</mapper>

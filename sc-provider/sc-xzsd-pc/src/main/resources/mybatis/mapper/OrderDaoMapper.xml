@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xzsd.pc.order.dao.OrderDao">
+    <!--订单分页列表-->
+    <select id="listOrders" parameterType="com.xzsd.pc.order.entity.OrderInfo" resultType="com.xzsd.pc.order.entity.OrderInfo">
+        select
+            orders_id ordersId,
+            orders_total_money ordersTotalMoney,
+            orders_state ordersState,
+            orders_pay_state ordersPayState,
+            store_id storeId,
+            b.name customerName,
+            b.phone customerPhone,
+            orders_pay_time ordersPayTime,
+            a.version
+        from
+            t_sys_order a,
+            (select
+                user_account,name,phone,d.customer_id
+            from
+                t_sys_user c,t_sys_customer d
+            where
+                c.user_id = d.user_id) b
+        where
+            a.is_deleted = 0
+            and a.customer_id = b.customer_id
+        <if test="role == 3">
+            and a.store_id = (select e.store_id from t_sys_store e where e.user_id = #{userId})
+        </if>
+        <if test="customerName != null and customerName !=''">
+            and b.name like concat('%',#{customerName},'%')
+        </if>
+        <if test="ordersId != null and ordersId !=''">
+            and orders_id = #{ordersId}
+        </if>
+        <if test="payTimeStart != null and payTimeEnd != null">
+            and orders_pay_time
+            between #{payTimeStart} and #{payTimeEnd}
+        </if>
+        <if test="payTimeStart == null and payTimeEnd != null">
+            and #{payTimeEnd} >= orders_pay_time
+        </if>
+        <if test="payTimeStart != null and payTimeEnd == null">
+            and orders_pay_time >= #{payTimeStart}
+        </if>
+        <if test="customerPhone != null and customerPhone !=''">
+            and b.phone like concat('%',#{customerPhone},'%')
+        </if>
+        <if test="ordersState != null and ordersState !=''">
+            and orders_state = #{ordersState}
+        </if>
+    </select>
+    <!--订单详情-->
+    <select id="findOrderById" parameterType="java.lang.String" resultType="com.xzsd.pc.orderDetails.entity.OrderDetailsInfo">
+        select
+            a.goods_id goodsId,
+            b.goods_name goodsName,
+            buy_number buyNumber,
+            total_money totalMoney,
+            goods_sale_money goodsSaleMoney,
+            goods_fix_money goodsFixMoney
+        from
+            t_sys_order_details a,t_sys_goods b
+        where
+            a.is_deleted = 0
+            and a.goods_id = b.goods_id
+            and orders_id = #{ordersId}
+    </select>
+    <!--订单状态修改-->
+    <update id="updateOrderState" parameterType="com.xzsd.pc.order.entity.OrderInfo">
+        update
+            t_sys_order
+        set
+            orders_state = #{ordersState},
+            gmt_modified = now(),
+            last_modified_by = #{updateUserId},
+            version = version + 1
+        where
+            orders_id in
+        <foreach item="item" index="index" collection="listUpdateOrdersId" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+</mapper>

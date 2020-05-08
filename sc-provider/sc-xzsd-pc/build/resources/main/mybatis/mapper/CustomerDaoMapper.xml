@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xzsd.pc.customer.dao.CustomerDao">
+    <!--客户分页列表-->
+    <select id="listCustomers" parameterType="com.xzsd.pc.customer.entity.CustomerInfo" resultType="com.xzsd.pc.customer.entity.CustomerInfo">
+        select
+            b.user_account customerAccount,
+            b.name customerName,
+            b.sex customerSex,
+            b.phone customerPhone,
+            b.email email,
+            b.idcard idCard,
+            a.user_id userId
+        from
+            t_sys_customer a,t_sys_user b
+        where
+            a.is_deleted = 0
+        and a.user_id = b.user_id
+        <if test="role == 3">
+            and a.store_id = (select c.store_id from t_sys_store c where c.user_id = #{userId})
+        </if>
+        <if test="customerName != null and customerName !=''">
+            and b.name like concat('%',#{customerName},'%')
+        </if>
+        <if test="customerAccount != null and customerAccount !=''">
+            and b.user_account like concat('%',#{customerAccount},'%')
+        </if>
+        order by a.gmt_create desc
+    </select>
+</mapper>

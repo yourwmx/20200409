@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xzsd.app.slideshow.dao.SlideshowDao">
+    <!--轮播图分页列表-->
+    <select id="listSlideshows" resultType="com.xzsd.app.slideshow.entity.SlideshowInfo">
+        select
+            slideshows_id slideshowsId,
+            slideshows_sort slideshowsSort,
+            slideshows_route slideshowsRoute,
+            slideshows_state slideshowsState,
+            slideshows_time_start slideshowsTimeStart,
+            slideshows_time_end slideshowsTimeEnd,
+            goods_id goodsId,
+            version
+        from
+            t_sys_slideshow
+        where
+            is_deleted = 0
+            and slideshows_state = 1
+            and now() >= slideshows_time_start
+            and slideshows_time_end >= now()
+        order by convert(slideshows_sort,signed)
+    </select>
+</mapper>

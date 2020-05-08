@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.neusoft.webauth.menu.dao.MenuDao">
+    <!--查询全部菜单-->
+    <select id="listMenus" resultType="com.neusoft.webauth.menu.entity.Menu">
+        select
+            menu_id menuId,
+            menu_name menuName,
+            menu_route menuRoute,
+            last_level_id lastLevelId,
+        	version
+        from
+            t_sys_menu
+        where
+            is_deleted = 0
+            and last_level_id = 0
+        order by gmt_create
+    </select>
+    <!--菜单详情-->
+    <select id="findMenuById" parameterType="java.lang.String" resultType="com.neusoft.webauth.menu.entity.Menu">
+        select
+            menu_name menuName,
+            is_menu isMenu,
+            menu_route menuRoute,
+            menu_note menuNote
+        from
+            t_sys_menu
+        where
+            menu_id = #{menuId}
+    </select>
+    <!--获取用户菜单-->
+    <select id="listMenusByManager" resultType="com.neusoft.webauth.menu.entity.Menu">
+        select
+            menu_id menuId,
+            menu_name menuName,
+            menu_route menuRoute,
+            last_level_id lastLevelId,
+        	version
+		from
+		    t_sys_menu
+		where
+		    is_deleted = 0
+		    and last_level_id = 0
+            and menu_name in ("客户管理","订单管理","门店信息管理","司机信息管理")
+    </select>
+    <!--删除菜单-->
+    <update id="deleteMenu" parameterType="com.neusoft.webauth.menu.entity.Menu">
+        update
+            t_sys_menu
+        set
+            is_deleted     = 1,
+            version      = version + 1,
+            gmt_modified = now(),
+            last_modified_by   = #{lastModifiedBy}
+        where
+            menu_id = #{menuId}
+    </update>
+    <!--新增菜单-->
+    <insert id="addMenu" parameterType="com.neusoft.webauth.menu.entity.Menu">
+        insert into t_sys_menu
+           (menu_id,
+            menu_name,
+            menu_route,
+            last_level_id,
+            is_menu,
+            menu_note,
+            is_deleted,
+            gmt_create,
+            create_by,
+            gmt_modified,
+            last_modified_by,
+            version
+          ) values (
+            #{menuId},
+            #{menuName},
+            #{menuRoute},
+            #{lastLevelId},
+            #{isMenu},
+            #{menuNote},
+            #{isDeleted},
+            now(),
+            #{createBy},
+            now(),
+            #{lastModifiedBy},
+            0)
+    </insert>
+    <!--修改菜单信息-->
+    <update id="updateMenuById" parameterType="com.neusoft.webauth.menu.entity.Menu">
+        update
+            t_sys_menu
+        set
+            menu_name    = #{menuName},
+            menu_route     = #{menuRoute},
+            is_menu      = #{isMenu},
+            menu_note    = #{menuNote},
+            version      = version + 1,
+            gmt_modified = now(),
+            last_modified_by   = #{lastModifiedBy}
+        where
+            menu_id = #{menuId}
+            and version = #{version}
+    </update>
+</mapper>
